@@ -1,0 +1,75 @@
+<!-- Dynamic Schema.org Prompt & Code Counter (Place before closing </body> tag) -->
+<script>
+(function() {
+    if (document.querySelector('script[type="application/ld+json"]#dynamic-schema-counter')) {
+        return;
+    }
+
+    // --- CONFIGURATION (Customize for your website) ---
+    var config = {
+        siteSuffix: '', // e.g., ' | My Blog' — optional string to strip from document.title
+        contentSelector: 'article, .entry-content, main',
+        codeSelector: 'pre, code, .wp-block-code, [class*="prompt"], [class*="code"]',
+        mediaSelector: 'img, video',
+        workDescription: 'Universal AI prompts, code blocks, and multi-modal generation examples (image, video, and text).',
+        baseKeywords: 'AI prompts, prompt engineering, code blocks, text-to-image, text-to-video, LLM prompts',
+        injectMetaKeywords: true
+    };
+    // ---------------------------------------------------
+
+    var rawTitle = document.title || 'Untitled Page';
+    var cleanTitle = config.siteSuffix ? rawTitle.replace(config.siteSuffix, '').trim() : rawTitle.split('|')[0].trim();
+    var topicName = cleanTitle.split(':')[0].trim();
+    var pageUrl = window.location.href;
+
+    // Count media examples (images & videos) inside main content area
+    var container = document.querySelector(config.contentSelector) || document.body;
+    var mediaElements = container.querySelectorAll(config.mediaSelector);
+    var mediaCount = mediaElements.length;
+    var mediaUrls = [];
+
+    mediaElements.forEach(function(el) {
+        var src = el.currentSrc || el.src || el.getAttribute('poster');
+        if (src && mediaUrls.length < 5) {
+            mediaUrls.push(src);
+        }
+    });
+
+    // Count prompt or code blocks
+    var codeBlocks = container.querySelectorAll(config.codeSelector);
+    var blockCount = codeBlocks.length;
+
+    // Build Schema.org JSON-LD payload
+    var jsonLD = {
+        "@context": "https://schema.org",
+        "@type": "ItemPage",
+        "url": pageUrl,
+        "mainEntity": {
+            "@type": "CreativeWork",
+            "name": topicName,
+            "description": config.workDescription,
+            "keywords": topicName + ", " + config.baseKeywords,
+            "text": "This page features " + blockCount + " prompt/code blocks and " + mediaCount + " visual media examples for " + topicName + "."
+        }
+    };
+
+    if (mediaUrls.length > 0) {
+        jsonLD.mainEntity.image = mediaUrls;
+    }
+
+    // Inject JSON-LD into <head>
+    var scriptEl = document.createElement('script');
+    scriptEl.type = 'application/ld+json';
+    scriptEl.id = 'dynamic-schema-counter';
+    scriptEl.text = JSON.stringify(jsonLD);
+    document.head.appendChild(scriptEl);
+
+    // Optionally inject meta keywords
+    if (config.injectMetaKeywords && !document.querySelector('meta[name="keywords"]')) {
+        var metaKey = document.createElement('meta');
+        metaKey.name = "keywords";
+        metaKey.content = topicName + ", " + config.baseKeywords + ", " + blockCount + " prompts";
+        document.head.appendChild(metaKey);
+    }
+})();
+</script>
